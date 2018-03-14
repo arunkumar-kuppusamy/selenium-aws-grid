@@ -6,6 +6,7 @@ echo "Grid Scaler sarted"
 [ -z ${IP_ADDRESS} ] && IP_ADDRESS=10.10.10.10
 
 java -DipAddress="${IP_ADDRESS}" \
+    -DpropertyFileLocation=/user/bin/aws.properties \
     -cp /target/automation-grid.jar org.openqa.grid.selenium.GridLauncherV3 \
     -role hub \
     -servlets "com.rmn.qa.servlet.AutomationTestRunServlet","com.rmn.qa.servlet.StatusServlet"
