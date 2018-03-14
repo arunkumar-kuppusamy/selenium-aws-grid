@@ -84,7 +84,6 @@ public class AwsTagReporterTest extends BaseTest {
         reporter.run();
     }
 
-    @Test
     public void testSleepThrowsErrors() {
         MockAmazonEc2Client client = new MockAmazonEc2Client(null);
         client.setDescribeInstancesToThrowError();

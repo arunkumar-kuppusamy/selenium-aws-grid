@@ -305,8 +305,8 @@
                 <version>2.4</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <target>1.7</target>
-                    <source>1.7</source>
+                    <target>1.8</target>
+                    <source>1.8</source>
                 </configuration>
             </plugin>
             <!-- Make sure to include sources with our JAR that we're producing -->
