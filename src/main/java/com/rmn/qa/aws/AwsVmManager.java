@@ -91,8 +91,9 @@ public class AwsVmManager implements VmManager {
             credentials = getCredentials();
             client = new AmazonEC2Client(credentials);
         } catch (IllegalArgumentException e) {
-            log.info("Falling back to IAM roles for authorization since no credentials provided in system properties", e);
+            log.info("====> Falling back to IAM roles for authorization since no credentials provided in system properties", e);
             client = new AmazonEC2Client();
+            log.info("====> Service Name :"+ client.getServiceName());
         }
         AwsVmManager.setRegion(client, awsProperties, region);
     }
