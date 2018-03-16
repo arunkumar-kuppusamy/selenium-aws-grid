@@ -30,6 +30,7 @@ import java.util.TimeZone;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import org.apache.commons.codec.binary.Base64;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
@@ -91,7 +92,8 @@ public class AwsVmManager implements VmManager {
             credentials = getCredentials();
             client = new AmazonEC2Client(credentials);
         } catch (IllegalArgumentException e) {
-            log.info("====> Falling back to IAM roles for authorization since no credentials provided in system properties", e);
+            log.info("====> Falling back to IAM roles for authorization since no credentials provided in system properties");
+
             client = new AmazonEC2Client();
             log.info("====> Service Name :"+ client.getServiceName());
         }
@@ -457,6 +459,7 @@ public class AwsVmManager implements VmManager {
 
             // Make sure and close the zip before encoding it
             zos.close();
+            log.info("Node Configuration ====>"+nodeConfigContents);
             return new String(Base64.encodeBase64(outputStream.toByteArray()));
 
         } catch (IOException ex) {
