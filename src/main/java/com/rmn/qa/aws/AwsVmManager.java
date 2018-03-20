@@ -11,13 +11,7 @@
  */
 package com.rmn.qa.aws;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -270,6 +264,7 @@ public class AwsVmManager implements VmManager {
             platform = DEFAULT_PLATFORM;
         }
         String userData = getUserData(uuid, hubHostName, browser, platform, maxSessions);
+        // userData = getUserData();
         Properties awsProperties = getAwsProperties();
         String amiId = awsProperties.getProperty(getAmiIdForOs(platform, browser));
         String instanceType = awsProperties.getProperty("node_instance_type_" + browser);
@@ -459,12 +454,24 @@ public class AwsVmManager implements VmManager {
 
             // Make sure and close the zip before encoding it
             zos.close();
-            log.info("Node Configuration ====>"+nodeConfigContents);
+            log.info("\n ======Node Configuration ====> "+nodeConfigContents);
             return new String(Base64.encodeBase64(outputStream.toByteArray()));
 
         } catch (IOException ex) {
             throw new RuntimeException("Error getting user data", ex);
         }
+    }
+
+    private String getUserData() {
+        String userData = "";
+        userData = userData + "#!/bin/bash" + "\n" + "echo user data running";
+        String base64UserData = null;
+        try {
+            base64UserData = new String( Base64.encodeBase64( userData.getBytes( "UTF-8" )), "UTF-8" );
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return base64UserData;
     }
 
     /**
