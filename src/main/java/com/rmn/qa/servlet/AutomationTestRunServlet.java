@@ -334,7 +334,9 @@ public class AutomationTestRunServlet extends RegistryBasedServlet implements Re
             Date startDate = new Date();
             List<AutomationDynamicNode> createdNodes = Lists.newArrayList();
             for (Instance instance : instances) {
-                AutomationDynamicNode createdNode = new AutomationDynamicNode(uuid, instance.getInstanceId(), browser, platform, instance.getPrivateIpAddress(), startDate, numThreadsPerMachine, instance.getInstanceType());
+                AutomationDynamicNode createdNode =
+                        new AutomationDynamicNode(uuid, instance.getInstanceId(), browser, platform,
+                                instance.getPrivateIpAddress(), startDate, numThreadsPerMachine, instance.getInstanceType());
                 // Add the node as pending startup to our context so we can track it in AutomationPendingNodeRegistryTask
                 AutomationContext.getContext().addPendingNode(createdNode);
                 log.info("Node instance id: " + instance.getInstanceId());

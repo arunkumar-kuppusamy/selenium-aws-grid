@@ -264,7 +264,7 @@ public class AwsVmManager implements VmManager {
             platform = DEFAULT_PLATFORM;
         }
         // String userData = getUserData(uuid, hubHostName, browser, platform, maxSessions);
-        String userData = getUserData(hubHostName, browser, maxSessions);
+        String userData = getUserDataNew(uuid, hubHostName, browser, platform, maxSessions);
         Properties awsProperties = getAwsProperties();
         String amiId = awsProperties.getProperty(getAmiIdForOs(platform, browser));
         String instanceType = awsProperties.getProperty("node_instance_type_" + browser);
@@ -458,8 +458,9 @@ public class AwsVmManager implements VmManager {
         }
     }
 
-    private String getUserData(final String hubHostName, final String browser, final int maxSessions) {
-        String dockerCommand = getDockerCommand(maxSessions, hubHostName, browser);
+    private String getUserDataNew(final String uuid, final String hostName, final String browser, final Platform platform,
+                                  final int maxSessions) {
+        String dockerCommand = getDockerCommand(uuid, hostName, browser, platform, maxSessions);
         String userData = "#!/bin/bash" +
                 "\n echo user data running" +
                 "\n export EC2_INSTANCE_IP=\"`wget -q -O - http://169.254.169.254/latest/meta-data/local-ipv4 || die \"wget instance-id has failed: $?\"`\"" +
@@ -474,14 +475,19 @@ public class AwsVmManager implements VmManager {
         return base64UserData;
     }
 
-    private String getDockerCommand(int maxInstance, final String hubHostName, final String browser) {
+    private String getDockerCommand(final String uuid, final String hostName, final String browser, final Platform platform,
+                                    final int maxSessions) {
         String dockerCommand = "";
-        String image = browser.equalsIgnoreCase("chrome") ? "selenium/node-chrome" : "selenium/node-firefox";
-        for (int i = 0; i < maxInstance; i++) {
+        String image = browser.equalsIgnoreCase("chrome") ? "sanit7220/chrome-scaler-node" : "selenium/node-firefox";
+        Date createdDate = Calendar.getInstance().getTime();
+        for (int i = 0; i < maxSessions; i++) {
             int hostPort = 5555 + i;
-            dockerCommand = dockerCommand + "docker run -d -p " + hostPort + ":5555 -e REMOTE_HOST=\"http://$EC2_INSTANCE_IP:" + hostPort + "\" " +
-                    "-e HUB_PORT_4444_TCP_ADDR=" + hubHostName + " -e HUB_PORT_4444_TCP_PORT=4444 -e NODE_APPLICATION_NAME=$EC2_INSTANCE_ID "+
-                    image + " \n";
+            String command = "docker run -d -p " + hostPort + ":5555 -e REMOTE_HOST=\"http://$EC2_INSTANCE_IP:" + hostPort + "\" " +
+                    "-e HUB_PORT_4444_TCP_ADDR=" + hostName + " -e HUB_PORT_4444_TCP_PORT=4444 -e INSTANCE_ID=$EC2_INSTANCE_ID " +
+                    "-e UUID=" + uuid + " -e CREATED_BROWSER=" + browser + " -e CREATED_OS=" + platform + " -e CREATED_DATE=\""
+                    + AwsVmManager.NODE_DATE_FORMAT.format(createdDate) + "\" " + image + "\n";
+            log.info("+++++++++++" + command);
+            dockerCommand = dockerCommand + command;
         }
         return dockerCommand;
     }
