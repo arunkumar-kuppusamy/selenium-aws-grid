@@ -24,7 +24,6 @@ import java.util.TimeZone;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import org.apache.commons.codec.binary.Base64;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
@@ -51,7 +50,7 @@ import com.rmn.qa.BrowserPlatformPair;
 import com.rmn.qa.NodesCouldNotBeStartedException;
 
 /**
- * @author  mhardin
+ * @author mhardin
  */
 public class AwsVmManager implements VmManager {
 
@@ -59,7 +58,8 @@ public class AwsVmManager implements VmManager {
     public static final DateFormat NODE_DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
     public static final Platform DEFAULT_PLATFORM = Platform.UNIX;
     private AmazonEC2Client client;
-    @VisibleForTesting AWSCredentials credentials;
+    @VisibleForTesting
+    AWSCredentials credentials;
     private Properties awsProperties;
     public static final int CHROME_THREAD_COUNT = 5;
     public static final int FIREFOX_IE_THREAD_COUNT = 1;
@@ -89,7 +89,7 @@ public class AwsVmManager implements VmManager {
             log.info("====> Falling back to IAM roles for authorization since no credentials provided in system properties");
 
             client = new AmazonEC2Client();
-            log.info("====> Service Name :"+ client.getServiceName());
+            log.info("====> Service Name :" + client.getServiceName());
         }
         AwsVmManager.setRegion(client, awsProperties, region);
     }
@@ -101,9 +101,9 @@ public class AwsVmManager implements VmManager {
     /**
      * Creates a new AwsVmManager instance.
      *
-     * @param  client {@link com.amazonaws.services.ec2.AmazonEC2Client Client} to use for AWS interaction
-     * @param  properties {@link java.util.Properties Properties} to use for EC2 config loading
-     * @param  region      Region inside of AWS to use
+     * @param client     {@link com.amazonaws.services.ec2.AmazonEC2Client Client} to use for AWS interaction
+     * @param properties {@link java.util.Properties Properties} to use for EC2 config loading
+     * @param region     Region inside of AWS to use
      */
     public AwsVmManager(final AmazonEC2Client client, final Properties properties, final String region) {
         this.client = client;
@@ -191,10 +191,10 @@ public class AwsVmManager implements VmManager {
     }
 
     public List<Instance> launchNodes(final String amiId, final String instanceType, final int numberToStart,
-            final String userData, final boolean terminateOnShutdown) throws NodesCouldNotBeStartedException {
+                                      final String userData, final boolean terminateOnShutdown) throws NodesCouldNotBeStartedException {
         RunInstancesRequest runRequest = new RunInstancesRequest();
         runRequest.withImageId(amiId).withInstanceType(instanceType).withMinCount(numberToStart)
-                  .withMaxCount(numberToStart).withUserData(userData);
+                .withMaxCount(numberToStart).withUserData(userData);
         if (terminateOnShutdown) {
             runRequest.withInstanceInitiatedShutdownBehavior("terminate");
         }
@@ -263,8 +263,8 @@ public class AwsVmManager implements VmManager {
         if (platform == platform.ANY) {
             platform = DEFAULT_PLATFORM;
         }
-        String userData = getUserData(uuid, hubHostName, browser, platform, maxSessions);
-        // userData = getUserData();
+        // String userData = getUserData(uuid, hubHostName, browser, platform, maxSessions);
+        String userData = getUserData(hubHostName, browser, maxSessions);
         Properties awsProperties = getAwsProperties();
         String amiId = awsProperties.getProperty(getAmiIdForOs(platform, browser));
         String instanceType = awsProperties.getProperty("node_instance_type_" + browser);
@@ -275,19 +275,17 @@ public class AwsVmManager implements VmManager {
      * Attempts to run the {@link com.amazonaws.services.ec2.model.RunInstancesRequest RunInstancesRequest}, falling
      * back on alternative subnets if capacity is full in the current region.
      *
-     * @param   request
-     * @param   requestNumber
-     *
+     * @param request
+     * @param requestNumber
      * @return
-     *
-     * @throws  NodesCouldNotBeStartedException
+     * @throws NodesCouldNotBeStartedException
      */
     private RunInstancesResult getResults(final RunInstancesRequest request, int requestNumber)
-        throws NodesCouldNotBeStartedException {
+            throws NodesCouldNotBeStartedException {
         RunInstancesResult runInstancesResult;
         try {
             AmazonEC2Client localClient = getClient();
-            if(localClient == null){
+            if (localClient == null) {
                 throw new RuntimeException("The client is not initialized");
             }
             runInstancesResult = localClient.runInstances(request);
@@ -313,7 +311,7 @@ public class AwsVmManager implements VmManager {
                     request.withSubnetId(fallBackSubnetId);
                 } else {
                     throw new NodesCouldNotBeStartedException(
-                        "Sufficient resources were not available in any of the availability zones");
+                            "Sufficient resources were not available in any of the availability zones");
                 }
 
                 return getResults(request, requestNumber);
@@ -330,8 +328,8 @@ public class AwsVmManager implements VmManager {
     /**
      * Assigns the tags asynchronously to AWS.
      *
-     * @param  threadName
-     * @param  instances
+     * @param threadName
+     * @param instances
      */
     @VisibleForTesting
     void associateTags(final String threadName, final Collection<Instance> instances) {
@@ -342,9 +340,8 @@ public class AwsVmManager implements VmManager {
     /**
      * Gets the instance ID based on the OS that is chosen.
      *
-     * @param   platform       OS for the requested test run
-     * @param   browser  Browser for the requested test run
-     *
+     * @param platform OS for the requested test run
+     * @param browser  Browser for the requested test run
      * @return
      */
     private String getAmiIdForOs(Platform platform, final String browser) {
@@ -365,20 +362,20 @@ public class AwsVmManager implements VmManager {
     /**
      * Terminates the specified instance.
      *
-     * @param  instanceId  Id of the instance to terminate
+     * @param instanceId Id of the instance to terminate
      */
     public boolean terminateInstance(final String instanceId) {
         TerminateInstancesRequest terminateRequest = new TerminateInstancesRequest();
         terminateRequest.withInstanceIds(instanceId);
 
         AmazonEC2Client localClient = getClient();
-        if(localClient == null){
+        if (localClient == null) {
             throw new RuntimeException("The client is not initialized");
         }
         TerminateInstancesResult result;
-        try{
+        try {
             result = localClient.terminateInstances(terminateRequest);
-        } catch(AmazonServiceException ase) {
+        } catch (AmazonServiceException ase) {
             // If the node was terminated outside of this plugin, handle the error appropriately
             if (ase.getErrorCode().equals("InvalidInstanceID.NotFound")) {
                 log.error("Node not found when attempting to remove: " + instanceId);
@@ -420,17 +417,16 @@ public class AwsVmManager implements VmManager {
     /**
      * Returns a zip file containing the necessary user data for the images we're going to spin up.
      *
-     * @param   uuid         UUID of the test run
-     * @param   hubHostName  Resolvable host name of the hub the node will register with
-     * @param   browser      Browser for the requested test run
-     * @param   platform           OS for the requested test run
-     * @param   maxSessions  Maximum simultaneous test sessions
-     *
+     * @param uuid        UUID of the test run
+     * @param hubHostName Resolvable host name of the hub the node will register with
+     * @param browser     Browser for the requested test run
+     * @param platform    OS for the requested test run
+     * @param maxSessions Maximum simultaneous test sessions
      * @return
      */
     @VisibleForTesting
     String getUserData(final String uuid, final String hubHostName, final String browser, final Platform platform,
-            final int maxSessions) {
+                       final int maxSessions) {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
              ZipOutputStream zos = new ZipOutputStream(outputStream);
         ) {
@@ -454,7 +450,7 @@ public class AwsVmManager implements VmManager {
 
             // Make sure and close the zip before encoding it
             zos.close();
-            log.info("\n ======Node Configuration ====> "+nodeConfigContents);
+            log.info("\n ======Node Configuration ====> " + nodeConfigContents);
             return new String(Base64.encodeBase64(outputStream.toByteArray()));
 
         } catch (IOException ex) {
@@ -462,16 +458,32 @@ public class AwsVmManager implements VmManager {
         }
     }
 
-    private String getUserData() {
-        String userData = "";
-        userData = userData + "#!/bin/bash" + "\n" + "echo user data running";
+    private String getUserData(final String hubHostName, final String browser, final int maxSessions) {
+        String dockerCommand = getDockerCommand(maxSessions, hubHostName, browser);
+        String userData = "#!/bin/bash" +
+                "\n echo user data running" +
+                "\n export EC2_INSTANCE_IP=\"`wget -q -O - http://169.254.169.254/latest/meta-data/local-ipv4 || die \"wget instance-id has failed: $?\"`\"" +
+                "\n export EC2_INSTANCE_ID=\"`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id || die \"wget instance-id has failed: $?\"`\"" +
+                "\n" + dockerCommand;
         String base64UserData = null;
         try {
-            base64UserData = new String( Base64.encodeBase64( userData.getBytes( "UTF-8" )), "UTF-8" );
+            base64UserData = new String(Base64.encodeBase64(userData.getBytes("UTF-8")), "UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
         return base64UserData;
+    }
+
+    private String getDockerCommand(int maxInstance, final String hubHostName, final String browser) {
+        String dockerCommand = "";
+        String image = browser.equalsIgnoreCase("chrome") ? "selenium/node-chrome" : "selenium/node-firefox";
+        for (int i = 0; i < maxInstance; i++) {
+            int hostPort = 5555 + i;
+            dockerCommand = dockerCommand + "docker run -d -p " + hostPort + ":5555 -e REMOTE_HOST=\"http://$EC2_INSTANCE_IP:" + hostPort + "\" " +
+                    "-e HUB_PORT_4444_TCP_ADDR=" + hubHostName + " -e HUB_PORT_4444_TCP_PORT=4444 -e NODE_APPLICATION_NAME=$EC2_INSTANCE_ID "+
+                    image + " \n";
+        }
+        return dockerCommand;
     }
 
     /**
@@ -505,7 +517,7 @@ public class AwsVmManager implements VmManager {
 
         // Pass in the created date so we can know when this node was spun up
         nodeConfig = nodeConfig.replaceAll("<CREATED_DATE>", AwsVmManager.NODE_DATE_FORMAT.format(createdDate));
-        String hubUrl = "http://"+hostName+":4444";
+        String hubUrl = "http://" + hostName + ":4444";
         nodeConfig = nodeConfig.replaceFirst("<HOST_NAME>", hubUrl);
         return nodeConfig;
     }
@@ -528,8 +540,7 @@ public class AwsVmManager implements VmManager {
     /**
      * Returns the contents of the specified resource as a string.
      *
-     * @param   resourceName
-     *
+     * @param resourceName
      * @return
      */
     private static String getFileContents(final String resourceName) {

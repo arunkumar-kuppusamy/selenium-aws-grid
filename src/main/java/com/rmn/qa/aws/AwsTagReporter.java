@@ -126,6 +126,8 @@ public class AwsTagReporter extends Thread {
         Tag nodeTag = new Tag("LaunchSource","MP-Selenium-Grid");
         log.info("Adding hard-coded tag: " + nodeTag);
         tags.add(nodeTag);
+        Tag nodeName = new Tag("name", "MP-Selenium-Node");
+        tags.add(nodeName);
         CreateTagsRequest ctr = new CreateTagsRequest(Arrays.asList(instanceId),tags);
         ec2Client.createTags(ctr);
     }
