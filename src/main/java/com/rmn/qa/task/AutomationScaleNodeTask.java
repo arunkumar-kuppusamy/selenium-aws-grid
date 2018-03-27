@@ -76,7 +76,8 @@ public class AutomationScaleNodeTask extends AbstractAutomationCleanupTask {
     }
 
     @VisibleForTesting
-    List<AutomationDynamicNode> startNodes(VmManager vmManager, int browsersToStart, String browser, Platform platform) throws NodesCouldNotBeStartedException {
+    List<AutomationDynamicNode> startNodes(VmManager vmManager, int browsersToStart, String browser, Platform platform)
+            throws NodesCouldNotBeStartedException {
         return AutomationTestRunServlet.startNodes(vmManager, "AD-HOC", browsersToStart, browser, platform);
     }
 

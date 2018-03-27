@@ -42,7 +42,8 @@ public final class AutomationRunContext {
     private static final int CLEANUP_LIFE_LENGTH_IN_SECONDS = 90; // 1.5 minutes
     private Map<String, AutomationRunRequest> requests = Maps.newConcurrentMap();
     private Map<String, AutomationDynamicNode> nodes = Maps.newConcurrentMap();
-    private Map<String, AutomationDynamicNode> pendingStartupNodes = Maps.newConcurrentMap(); // Nodes that are currently starting up and have not registered yet
+    private Map<String, AutomationDynamicNode> pendingStartupNodes = Maps.newConcurrentMap();
+    // Nodes that are currently starting up and have not registered yet
 
     private volatile int totalNodeCount;
 

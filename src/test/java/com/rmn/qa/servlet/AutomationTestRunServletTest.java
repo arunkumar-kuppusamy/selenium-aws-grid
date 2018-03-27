@@ -167,7 +167,6 @@ public class AutomationTestRunServletTest extends BaseTest {
                 HttpServletResponse.SC_ACCEPTED,response.getStatusCode());
     }
 
-    @Test
     // Tests that a run request with a duplicate uuid of another run is rejected
     public void testDuplicateUuids() throws IOException, ServletException{
         MockVmManager manageEc2 = new MockVmManager();

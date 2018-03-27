@@ -219,15 +219,19 @@ public class AutomationTestRunServlet extends RegistryBasedServlet implements Re
         // Synchronize this block until we've added the run to our context for other potential threads to see
         synchronized (AutomationTestRunServlet.class) {
             int remainingNodesAvailable = AutomationContext.getContext().getTotalThreadsAvailable(getProxySet());
-            // If the number of nodes this grid hub can actually run is less than the number requested, this hub can not fulfill this run at this time
+            // If the number of nodes this grid hub can actually run is less than the number requested,
+            // this hub can not fulfill this run at this time
             if (remainingNodesAvailable < runRequest.getThreadCount()) {
-                log.error(String.format("Requested node count of [%d] could not be fulfilled due to hub limit. [%d] nodes available - Request UUID [%s]", threadCountRequested, remainingNodesAvailable, uuid));
-                response.sendError(HttpServletResponse.SC_CONFLICT, "Server cannot fulfill request due to configured node limit being reached.");
+                log.error(String.format("Requested node count of [%d] could not be fulfilled due to hub limit. " +
+                        "[%d] nodes available - Request UUID [%s]", threadCountRequested, remainingNodesAvailable, uuid));
+                response.sendError(HttpServletResponse.SC_CONFLICT,
+                        "Server cannot fulfill request due to configured node limit being reached.");
                 return;
             }
             // Get the number of matching, free nodes to determine if we need to start up AMIs or not
             currentlyAvailableNodes = requestMatcher.getNumFreeThreadsForParameters(getProxySet(), runRequest);
-            // If the number of available nodes is less than the total number requested, we will have to spin up AMIs in order to fulfill the request
+            // If the number of available nodes is less than the total number requested,
+            // we will have to spin up AMIs in order to fulfill the request
             amisNeeded = currentlyAvailableNodes < threadCountRequested;
             if (amisNeeded) {
                 // Get the difference which will be the number of additional nodes we need to spin up to supplement existing nodes
@@ -235,21 +239,25 @@ public class AutomationTestRunServlet extends RegistryBasedServlet implements Re
             }
             // If the browser requested is not supported by AMIs, we need to not unnecessarily spin up AMIs
             if (amisNeeded && !AutomationUtils.browserAndPlatformSupported(browserPlatformPairRequest)) {
-                response.sendError(HttpServletResponse.SC_GONE, "Request cannot be fulfilled and browser and platform is not supported by AMIs");
+                response.sendError(HttpServletResponse.SC_GONE,
+                        "Request cannot be fulfilled and browser and platform is not supported by AMIs");
                 return;
             }
             // Add the run to our context so we can track it
-            AutomationRunRequest newRunRequest = new AutomationRunRequest(uuid, threadCountRequested, browserRequested, browserVersion, requestedPlatform);
+            AutomationRunRequest newRunRequest = new AutomationRunRequest(uuid, threadCountRequested,
+                    browserRequested, browserVersion, requestedPlatform);
             boolean addSuccessful = AutomationContext.getContext().addRun(newRunRequest);
             if (!addSuccessful) {
                 log.warn(String.format("Test run already exists for the same UUID [%s]", uuid));
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Test run already exists with the same UUID.");
+                response.sendError(HttpServletResponse.SC_ACCEPTED, "Test run already exists for the same UUID");
                 return;
             }
         }
         if (amisNeeded) {
             // Start up AMIs as that will be required
-            log.warn(String.format("Insufficient nodes to fulfill request. New AMIs will be queued up. Requested [%s] - Available [%s] - Request UUID [%s]", threadCountRequested, currentlyAvailableNodes, uuid));
+            log.warn(String.format("Insufficient nodes to fulfill request. " +
+                    "New AMIs will be queued up. Requested [%s] - Available [%s] - Request UUID [%s]",
+                    threadCountRequested, currentlyAvailableNodes, uuid));
             try {
                 AutomationTestRunServlet.startNodes(ec2, uuid, amiThreadsToStart, browserRequested, requestedPlatform);
             } catch (NodesCouldNotBeStartedException e) {
